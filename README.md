@@ -1,18 +1,55 @@
-WordRush: L'Avventura Linguistica a Blocchi
-Uno Sguardo al Progetto
-Benvenuti in WordRush! Questo non è solo un quiz, ma un vero e proprio platform game interattivo pensato per rendere l'apprendimento dei vocaboli per bambini un'esperienza divertente e dinamica.
-L'idea è semplice: ti ritroverai in un mondo che ricorda i classici videogiochi arcade. Il tuo obiettivo è guidare il personaggio saltando e toccando il blocco di traduzione corretto in una serie di livelli che mettono alla prova le tue conoscenze linguistiche. Dalle parole base ai verbi d'azione, WordRush offre un modo stimolante per consolidare il tuo vocabolario.
+# 🕹️ WordRush: Platform Game per l'Apprendimento Linguistico
 
-Contesto Accademico e Validazione
-Questo progetto è il frutto del lavoro di Emanuele Morghen ed Erika Riccardi, realizzato in preparazione all'esame di Tecnologie Web presso l'Università degli Studi di Napoli "L'Orientale".
+> **WordRush** è un **platform game interattivo** progettato per rendere l'apprendimento dei vocaboli per bambini un'esperienza divertente in stile arcade.
 
-Abbiamo unito la passione per il gaming retrò con la necessità di creare un'applicazione web altamente interattiva, dimostrando l'uso di JavaScript per la logica di gioco e di CSS per gli effetti grafici.
+L'obiettivo del giocatore è guidare il personaggio a selezionare il blocco di traduzione corretto, affrontando livelli che mettono alla prova il vocabolario.
 
-Affidabilità dei Contenuti
-Attualmente, il gioco è operativo con set di vocaboli in Inglese. I set di parole e le traduzioni sono stati validati e testati grazie alla collaborazione e al parere di laureati in Lingua Inglese, garantendo l'accuratezza dei contenuti didattici.
 
-Flessibilità Linguistica e Sviluppo
-Pronto per il Mondo
-WordRush è stato progettato sin dalle fondamenta per essere facilmente localizzato in più lingue.
+## ✨ Caratteristiche Chiave
 
-Sebbene la versione di lancio si concentri sulla sezione Italiano → Inglese, la struttura dati e la logica di gioco sono già pronte per accogliere nuove sezioni (come Russo, Spagnolo, ecc.) con un intervento minimo sul codice JavaScript. Questo lo rende un progetto ideale per l'espansione futura.
+* **Platform Gameplay:** Meccaniche di gioco dinamiche (salto e movimento).
+* **Contenuti Validati:** Set di vocaboli Inglese validati da laureati in Lingua.
+* **Architettura Espandibile:** Struttura pronta per l'aggiunta di nuove lingue (es. Russo, Spagnolo) con interventi minimi.
+* **Tecnologie:** Sviluppato interamente in **JavaScript** (logica di gioco) e **CSS** (grafica retrò).
+
+
+## 🛠️ Guida Rapida all'Avvio
+
+1.  **Clonare il Repository:**
+    ```bash
+    WordRush
+    ```
+2.  **Eseguire:**
+    * Aprire il file **`WordRush.html`** in un qualsiasi browser moderno per avviare il gioco.
+
+
+## 🌎 Stato Attuale e Roadmap
+
+* **Lingua Attuale:** Italiano (richiesta) → **Inglese** (risposta).
+* **Prossimi Sviluppi:** Implementazione dei set di vocaboli per Spagnolo e Russo.
+
+
+## 🤝 Contributi e Feedback
+Se hai suggerimenti per nuovi vocaboli, bug da segnalare o idee per nuove funzionalità, apri pure un'**Issue** su questo repository.
+
+* MIT License
+
+Copyright (c) 2025 ErikaRiccardi
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
