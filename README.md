@@ -17,7 +17,7 @@ L'obiettivo del giocatore è guidare il personaggio a selezionare il blocco di t
 
 1.  **Clonare il Repository:**
     ```bash
-    WordRush
+   [ WordRush] (https://github.com/ErikaRiccardi/WordRush.git)
     ```
 2.  **Eseguire:**
     * Aprire il file **`WordRush.html`** in un qualsiasi browser moderno per avviare il gioco.
