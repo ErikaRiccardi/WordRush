@@ -23,7 +23,7 @@ L'obiettivo del giocatore è guidare il personaggio a selezionare il blocco di t
     * Aprire il file **`WordRush.html`** in un qualsiasi browser moderno per avviare il gioco.
       
 
-Contesto Accademico e Sviluppatori
+## Contesto Accademico e Sviluppatori
 Questo progetto è il risultato del lavoro di:
 
 * **Erika Riccardi**
