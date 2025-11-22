@@ -21,6 +21,15 @@ L'obiettivo del giocatore è guidare il personaggio a selezionare il blocco di t
     ```
 2.  **Eseguire:**
     * Aprire il file **`WordRush.html`** in un qualsiasi browser moderno per avviare il gioco.
+      
+
+Contesto Accademico e Sviluppatori
+Questo progetto è il risultato del lavoro di:
+
+* **Erika Riccardi**
+* **Emanuele Morghen**
+
+È stato realizzato in preparazione all'esame di **Tecnologie Web** presso l'Università degli Studi di Napoli **"L'Orientale"**.
 
 
 ## Stato Attuale e Roadmap
