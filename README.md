@@ -16,7 +16,8 @@ L'obiettivo del giocatore è guidare il personaggio a selezionare il blocco di t
 ## Guida Rapida all'Avvio
 
 1.  **Clonare il Repository:**
-    ```bash [ WordRush] 
+    ```bash
+    [ WordRush] 
     ```
     
 2.  **Eseguire:**
