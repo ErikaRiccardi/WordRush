@@ -1,11 +1,11 @@
-# 🕹️ WordRush: Platform Game per l'Apprendimento Linguistico
+# WordRush: Platform Game per l'Apprendimento Linguistico
 
 > **WordRush** è un **platform game interattivo** progettato per rendere l'apprendimento dei vocaboli per bambini un'esperienza divertente in stile arcade.
 
 L'obiettivo del giocatore è guidare il personaggio a selezionare il blocco di traduzione corretto, affrontando livelli che mettono alla prova il vocabolario.
 
 
-## ✨ Caratteristiche Chiave
+## Caratteristiche Chiave
 
 * **Platform Gameplay:** Meccaniche di gioco dinamiche (salto e movimento).
 * **Contenuti Validati:** Set di vocaboli Inglese validati da laureati in Lingua.
@@ -13,7 +13,7 @@ L'obiettivo del giocatore è guidare il personaggio a selezionare il blocco di t
 * **Tecnologie:** Sviluppato interamente in **JavaScript** (logica di gioco) e **CSS** (grafica retrò).
 
 
-## 🛠️ Guida Rapida all'Avvio
+## Guida Rapida all'Avvio
 
 1.  **Clonare il Repository:**
     ```bash
@@ -23,13 +23,13 @@ L'obiettivo del giocatore è guidare il personaggio a selezionare il blocco di t
     * Aprire il file **`WordRush.html`** in un qualsiasi browser moderno per avviare il gioco.
 
 
-## 🌎 Stato Attuale e Roadmap
+## Stato Attuale e Roadmap
 
 * **Lingua Attuale:** Italiano (richiesta) → **Inglese** (risposta).
 * **Prossimi Sviluppi:** Implementazione dei set di vocaboli per Spagnolo e Russo.
 
 
-## 🤝 Contributi e Feedback
+## Contributi e Feedback
 Se hai suggerimenti per nuovi vocaboli, bug da segnalare o idee per nuove funzionalità, apri pure un'**Issue** su questo repository.
 
 * MIT License
