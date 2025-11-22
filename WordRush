@@ -1,0 +1,1874 @@
+<!doctype html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>WordRush</title>
+    <style>
+        .game-hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        body {
+            box-sizing: border-box;
+            min-height: 100vh;
+            min-width: 100vw;
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Comic Sans MS', 'Arial', sans-serif;
+        }
+
+        html {
+            height: 100%;
+        }
+
+        #game-container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            background: linear-gradient(to bottom, #4A90E2 0%, #87CEEB 50%, #FFE4B5 100%);
+            overflow: hidden;
+        }
+
+        /* Nuvole animate  */
+        .cloud {
+            position: absolute;
+            background: white;
+            border-radius: 50px;
+            opacity: 0.8;
+            animation: float 3s infinite linear;
+            z-index: 200; /* dietro i blocchi e il player, but above background */
+        }
+        /* Pseudo-elemento per creare la forma a nuvola (la seconda 'bolla') */
+        .cloud:before {
+            content: '';
+            position: absolute;
+            background: white;
+            border-radius: 50px;
+        }
+        /* Definizione e posizionamento delle due nuvole */
+        .cloud1 {
+            width: 80px;
+            height: 40px;
+            top: 10%;
+            animation-duration: 30s;
+        }
+
+        .cloud1:before {
+            width: 50px;
+            height: 50px;
+            top: -25px;
+            right: 10px;
+        }
+
+        .cloud2 {
+            width: 60px;
+            height: 30px;
+            top: 20%;
+            animation-delay: -10s;
+            animation-duration: 40s;
+        }
+
+        .cloud2:before {
+            width: 40px;
+            height: 40px;
+            top: -20px;
+            right: 8px;
+        }
+        /* Definizione e posizionamento della terza nuvola */
+        .cloud3 {
+            width: 90px;
+            height: 45px;
+            top: 30%; /* Posizione verticale diversa */
+            animation-delay: -10s; /* Partenza posticipata */
+            animation-duration: 40s; /* Velocità diversa */
+        }
+
+        .cloud3:before {
+            width: 60px;
+            height: 60px;
+            top: -30px;
+            right: 12px;
+        }
+
+        /* Definizione e posizionamento della quarta nuvola */
+        .cloud4 {
+            width: 70px;
+            height: 35px;
+            top: 60%; /* Posizione verticale molto diversa */
+            animation-delay: -50s; /* Partenza molto posticipata o anticipata */
+            animation-duration: 70s; /* Velocità diversa */
+        }
+
+        .cloud4:before {
+            width: 45px;
+            height: 45px;
+            top: -22px;
+            right: 7px;
+        }
+        /* Definizione e posizionamento della quinta nuvola */
+        .cloud5 {
+            width: 100px;
+            height: 50px;
+            top: 75%; /* Posizione molto in basso */
+            animation-delay: -5s; /* Partenza posticipata */
+            animation-duration: 35s; /* Velocità media-alta */
+        }
+
+        .cloud5:before {
+            width: 65px;
+            height: 65px;
+            top: -35px;
+            right: 15px;
+        }
+
+        /* Definizione e posizionamento della sesta nuvola */
+        .cloud6 {
+            width: 50px;
+            height: 25px;
+            top: 55%; /* Posizione media */
+            animation-delay: -70s; /* Partenza molto anticipata (per vederla subito) */
+            animation-duration: 80s; /* Velocità lenta */
+        }
+
+        .cloud6:before {
+            width: 35px;
+            height: 35px;
+            top: -18px;
+            right: 6px;
+        }
+        /* Keyframe per l'animazione di fluttuazione (movimento orizzontale) */
+        @keyframes float {
+            from {
+                /* Inizio orizzontale (destra) e Posizione verticale iniziale */
+                transform: translate(100vw, 5px);
+            }
+            to {
+                /* Fine orizzontale (sinistra) e Posizione verticale finale */
+                transform: translate(-100vw, -5px);
+            }
+        }
+
+        /* ==================================== */
+        /* INTERFACCIA UTENTE (UI) */
+        /* ==================================== */
+
+        #ui-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 20px;
+            z-index: 100;
+            display: flex; /* flex per posizionare gli elementi*/
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        #level-title {
+            /* Posiziona il livello al centro in alto */
+            position: absolute; /* rimane relativo alla viewport del gioco */
+            top: 6%;
+            left: 50%;
+            transform: translateX(-50%); /* centro orizzontale */
+            z-index: 1100; /* sopra gli elementi UI */
+            color: #FFD700;
+            font-size: 36px;
+            font-weight: 700;
+            text-shadow: 2px 2px 0 #000;
+            text-align: center;
+            pointer-events: none;
+        }
+
+        #score-display {
+            background: #FFFFFF;
+            /* RIDOTTO: Meno spazio interno */
+            padding: 8px 15px;
+            border-radius: 10px; /* Ridotto leggermente */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15); /* Ombra meno intensa */
+            /* RIDOTTO: Dimensione del testo più piccola */
+            font-size: 16px;
+            font-weight: bold;
+            color: #2C3E50;
+        }
+        /* Stile per la parola da indovinare o visualizzare durante il gioco */
+        #word-display {
+            background: #FFFFFF;
+            /* RIDOTTO: Meno spazio interno */
+            padding: 10px 20px;
+            border-radius: 10px; /* Ridotto leggermente */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15); /* Ombra meno intensa */
+            /* RIDOTTO: Dimensione del testo più piccola */
+            font-size: 20px;
+            font-weight: bold;
+            color: #E74C3C;
+            text-align: center;
+        }
+        /* Elemento per feedback visivo (es. "Corretto!", "Sbagliato!") */
+        #feedback {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 48px;
+            font-weight: bold;
+            padding: 30px 60px;
+            border-radius: 20px;
+            /* Inizialmente nascosto */
+            opacity: 0;
+            /* Non deve interferire con i click degli altri elementi */
+            pointer-events: none;
+            /* Animazione graduale per apparire e scomparire */
+            transition: opacity 0.3s;
+            /* Si posiziona sopra tutti gli altri elementi del gioco */
+            z-index: 200;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        /* ==================================== */
+        /* SCENARIO - TERRA ED ERBA */
+        /* ==================================== */
+        #ground {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 80px;
+            background:
+                    linear-gradient(to bottom, #D2691E 0%, #8B4513 100%),
+                    radial-gradient(circle at 20% 50%, #A0522D 2px, transparent 2px),
+                    radial-gradient(circle at 80% 20%, #A0522D 1px, transparent 1px),
+                    radial-gradient(circle at 40% 80%, #A0522D 1.5px, transparent 1.5px);
+            background-size: 100% 100%, 50px 50px, 30px 30px, 40px 40px;
+            background-position: 0 0, 0 0, 0 0, 0 0;
+            animation: groundMove 8s linear infinite;
+        }
+        /*erba*/
+        #grass {
+            position: absolute;
+            bottom: 60px;
+            left: 0;
+            right: 0;
+            height: 40px;
+            background-image: repeating-linear-gradient(
+                90deg,
+                #7CFC00 0px,
+                #7CFC00 10px,
+                #32CD32 10px,
+                #32CD32 18px,
+                #2E8B57 18px,
+                #2E8B57 24px
+            );
+            background-size: 48px 100%;
+            background-repeat: repeat-x;
+            overflow: hidden;
+        }
+        /* per l'effetto ciuffi d'erba */
+
+        @keyframes groundMove {
+            from { background-position: 0 0, 0 0, 0 0, 0 0; }
+            to   { background-position: -200px 0, -200px 0, -200px 0, -200px 0; }
+        }
+
+        /*  erba mossa */
+        #grass:before {
+            content: '';
+            position: absolute;
+            bottom: 20px;
+            left: 30px;
+            right: 30px;
+            height: 100%;
+            /* sfondi radiali multipli per simulare ciuffi d'erba di diverse dimensioni e colori */
+            background-image: radial-gradient(ellipse 3px 8px at 10px 100%, #228B22 50%, transparent 50%),
+            radial-gradient(ellipse 2px 6px at 15px 100%, #32CD32 50%, transparent 50%),
+            radial-gradient(ellipse 3px 9px at 20px 100%, #228B22 50%, transparent 50%),
+            radial-gradient(ellipse 2px 7px at 25px 100%, #2E8B57 50%, transparent 50%),
+            radial-gradient(ellipse 3px 8px at 30px 100%, #228B22 50%, transparent 50%),
+            radial-gradient(ellipse 2px 6px at 35px 100%, #32CD32 50%, transparent 50%),
+            radial-gradient(ellipse 3px 9px at 40px 100%, #228B22 50%, transparent 50%);
+            /* cambia l'immagine per ripetere il pattern dei ciuffi orizzontalmente */
+            background-size: 100px 100%;
+            background-repeat: repeat-x;
+            animation: grassWave 3s ease-in-out infinite;
+        }
+        /* Animazione per l'oscillazione dell'erba / non funziona benissimo*/
+        @keyframes grassWave {
+            0%, 100% {
+                transform: translateX(0);
+            }
+            50% {
+                transform: translateX(2px);
+            }
+        }
+
+        /* ==================================== */
+        /* ELEMENTI DI GIOCO - BLOCCHI MARIO */
+        /* ==================================== */
+        .mario-block {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FF8C00 100%);
+            border: 4px solid #B8860B;
+            border-radius: 8px;
+            box-shadow: inset 2px 2px 0 rgba(255, 255, 255, 0.5),
+            inset -2px -2px 0 rgba(0, 0, 0, 0.3),
+            0 4px 8px rgba(0, 0, 0, 0.4);
+            z-index: 120; /* sopra le nuvole */
+        }
+
+        .mario-block:before {
+            content: '?';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 32px;
+            font-weight: bold;
+            color: #8B4513;
+            text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.5);
+        }
+
+        /* Gruppo di blocchi a sinistra - 3 blocchi orizzontali bassi */
+        .block1 {
+            bottom: 180px;
+            left: 80px;
+        }
+
+        .block2 {
+            bottom: 180px;
+            left: 160px;
+        }
+
+        .block3 {
+            bottom: 180px;
+            left: 240px;
+        }
+
+        .block4 {
+            bottom: 180px;
+            left: 320px;
+        }
+
+        /* Gruppo di blocchi al centro - scala 5 blocchi */
+        .block5 {
+            bottom: 180px;
+            left: 50%;
+            transform: translateX(-200px);
+        }
+
+        .block6 {
+            bottom: 260px;
+            left: 50%;
+            transform: translateX(-120px);
+        }
+
+        .block7 {
+            bottom: 340px;
+            left: 50%;
+            transform: translateX(-40px);
+        }
+
+        .block8 {
+            bottom: 260px;
+            left: 50%;
+            transform: translateX(40px);
+        }
+
+        .block9 {
+            bottom: 180px;
+            left: 50%;
+            transform: translateX(120px);
+        }
+
+        /* Gruppo di blocchi a destra - 3 blocchi orizzontali alti */
+        .block10 {
+            bottom: 280px;
+            right: 80px;
+        }
+
+        .block11 {
+            bottom: 280px;
+            right: 160px;
+        }
+
+        .block12 {
+            bottom: 280px;
+            right: 240px;
+        }
+
+        .block13 {
+            bottom: 280px;
+            right: 320px;
+        }
+
+        /*giocatore base (Mario)*/
+        #player {
+            position: absolute;
+            bottom: 100px;
+            left: 100px;
+            width: 50px;
+            height: 60px;
+            transition: left 0.1s linear;
+            z-index: 200; /* davanti a blocchi e nuvole */
+        }
+
+        .player-body {
+            width: 50px;
+            height: 50px;
+            background: #FF4444;
+            border-radius: 10px;
+            position: relative;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+            border: 3px solid #CC0000;
+        }
+
+        /* Cappello di Mario */
+        .player-hat {
+            position: absolute;
+            top: -15px;
+            left: 5px;
+            width: 40px;
+            height: 20px;
+            background: #FF0000;
+            border-radius: 20px 20px 5px 5px;
+            border: 2px solid #CC0000;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .player-hat:after {
+            content: 'M';
+            position: absolute;
+            top: 2px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+            text-shadow: 1px 1px 0 #CC0000;
+        }
+
+        /* Baffi di Mario */
+        .player-mustache {
+            position: absolute;
+            top: 25px;
+            left: 15px;
+            width: 20px;
+            height: 8px;
+            background: #ffffff;
+            border-radius: 10px;
+            border: 1px solid #b8629d;
+        }
+
+        .player-eyes {
+            position: absolute;
+            top: 15px;
+            left: 10px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .eye {
+            width: 10px;
+            height: 10px;
+            background: white;
+            border-radius: 50%;
+            border: 2px solid #000;
+            position: relative;
+        }
+
+        .eye:after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 4px;
+            height: 4px;
+            background: #000;
+            border-radius: 50%;
+        }
+
+        .player-legs {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 2px;
+        }
+
+        .leg {
+            width: 18px;
+            height: 10px;
+            background: #0066CC;
+            border-radius: 5px;
+            border: 2px solid #004499;
+            box-shadow: 0 2px 3px rgba(0, 0, 0, 0.3);
+        }
+        /* Stile base per le opzioni di traduzione (i blocchi cliccabili nel gioco) */
+        .translation-option {
+            position: absolute;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #FF6B6B 0%, #FF4757 50%, #FF3742 100%);
+            color: white;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer; /*elemento cliccabile*/
+            border: 3px solid #C44569;
+            box-shadow: inset 2px 2px 0 rgba(255, 255, 255, 0.3), /*ombra interna*/
+            inset -2px -2px 0 rgba(0, 0, 0, 0.3), /*ombra interna scura*/
+            0 6px 12px rgba(0, 0, 0, 0.4); /*ombra blocco sollevato*/
+            transition: all 0.2s;
+            user-select: none; /* Impedisce che il testo all'interno del blocco possa essere selezionato */
+            text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.5);
+        }
+        /* Effetto visivo al passaggio del mouse sull'opzione di traduzione (HOVER) */
+        .translation-option:hover {
+            /* Trasformazione: Sposta leggermente in alto e ingrandisce */
+            transform: scale(1.05) translateY(-2px);
+            box-shadow: inset 2px 2px 0 rgba(255, 255, 255, 0.3),
+            inset -2px -2px 0 rgba(0, 0, 0, 0.3),
+            0 8px 16px rgba(0, 0, 0, 0.5);
+        }
+        /* Stile applicato quando l'opzione è selezionata ed è CORRETTA */
+        .translation-option.correct {
+            background: linear-gradient(135deg, #00D2FF 0%, #3A7BD5 100%);
+            border-color: #2C5282;
+            animation: correctPulse 0.6s ease-in-out;
+        }
+
+        .translation-option.wrong {
+            background: linear-gradient(135deg, #FF416C 0%, #FF4B2B 100%);
+            border-color: #C53030;
+            animation: wrongShake 0.6s ease-in-out;
+        }
+        /* Keyframe per l'animazione */
+        @keyframes correctPulse {
+            0%, 100% { /* Stato iniziale e finale*/
+                transform: scale(1);
+            }
+            50% {   /* A metà animazione */
+                transform: scale(1.1);
+            }
+        }
+
+        @keyframes wrongShake {
+            0%, 100% {
+                transform: translateX(0);
+            }
+            25% {
+                transform: translateX(-5px);
+            }
+            75% {
+                transform: translateX(5px);
+            }
+        }
+        /*quadrato delle istruzioni le gioco*/
+        #instructions {
+            position: absolute;
+            bottom: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px 30px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 16px;
+            color: #2C3E50;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            transition: opacity 0.3s ease-out;
+        }
+
+        #instructions strong {
+            color: #E74C3C;
+        }
+
+        /* ==================================== */
+        /* SCHERMATA PRINCIPALE (MAIN SCREEN) */
+        /* ==================================== */
+
+        #main-screen {
+            /* Copre l'intera area di gioco */
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            /* Usa un colore semi-trasparente per focalizzare l'attenzione */
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000; /* Deve stare sopra tutti gli elementi di gioco */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 20px;
+            align-items: center;
+            text-align: center;
+            /* Inizialmente visibile, verrà nascosto con JavaScript all'avvio */
+            transition: opacity 0.5s;
+        }
+
+        #main-screen.hidden {
+            opacity: 0;
+            display: none;
+            pointer-events: none; /* Rende la schermata inattiva quando nascosta */
+        }
+
+        #title {
+            font-size: 80px;
+            color: #FFD700; /* Oro */
+            text-shadow:
+                    5px 5px 0 #E74C3C, /* Rosso (bordo) */
+                    7px 7px 0 #000000; /* Nero (ombra) */
+            margin-bottom: 40px;
+            /* Rende il titolo un elemento centrale e appariscente */
+            animation: bounce 1s infinite alternate; /* Leggera animazione di rimbalzo */
+        }
+
+        /* Stile per i pulsanti (es. Inizia Gioco) */
+        .mario-button {
+            padding: 15px 40px;
+            margin: 10px;
+            font-size: 28px;
+            font-weight: bold;
+            color: white;
+            background-color: #2ECC71; /* Verde brillante */
+            border: 5px solid #27AE60;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 6px 0 #27AE60, 0 8px 15px rgba(0, 0, 0, 0.4);
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+
+        .mario-button:hover {
+            background-color: #3DCC81;
+        }
+
+        /* Effetto "premuto" quando si clicca */
+        .mario-button:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #27AE60, 0 4px 10px rgba(0, 0, 0, 0.4);
+        }
+
+        .mario-button[disabled] {
+            opacity: 0.5;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+
+        /* Scelta personaggio nella main screen */
+        .character-selection h3 {
+            margin: 8px 0 0 0;
+            color: #FFF;
+            font-size: 20px;
+        }
+
+        .character-container {
+            display: flex;
+            gap: 18px;
+            margin-top: 10px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .character-choice {
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.04);
+            border: 2px solid transparent;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: transform 0.12s, border-color 0.12s, box-shadow 0.12s;
+            min-width: 90px;
+        }
+        /* Stile applicato all'opzione personaggio quando viene selezionata */
+        .character-choice.selected {
+            border-color: #ff6f00;
+            transform: translateY(-6px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.35);
+        }
+
+        .character-preview {
+            width: 70px;
+            height: 70px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+            margin-bottom: 6px;
+        }
+
+        @keyframes character-float {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-6px); }
+            100% { transform: translateY(0); }
+        }
+
+        /*pulsante restart fine gioco*/
+        #restart-button-endScreen {
+            background: linear-gradient(135deg, #FF6B6B 0%, #FF4757 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            transition: all 0.2s;
+        }
+
+        #restart-button-endScreen:hover { transform: scale(1.05); box-shadow: 0 6px 12px rgba(0,0,0,0.4); }
+
+        /* Scelta personaggio nella main screen */
+        .character-selection h3 {
+            margin: 8px 0 0 0;
+            color: #FFF;
+            font-size: 20px;
+        }
+
+        .character-container {
+            display: flex;
+            gap: 18px;
+            margin-top: 10px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .character-choice {
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.04);
+            border: 2px solid transparent;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: transform 0.12s, border-color 0.12s, box-shadow 0.12s;
+            min-width: 90px;
+        }
+
+        .character-choice.selected {
+            border-color: #ed0606;
+            transform: translateY(-6px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.35);
+        }
+
+        .character-preview {
+            width: 70px;
+            height: 70px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+            margin-bottom: 6px;
+        }
+
+        /* Animazione del titolo */
+        @keyframes bounce {
+            from {
+                transform: translateY(0px);
+            }
+            to {
+                transform: translateY(-10px);
+            }
+        }
+
+        #restart-button {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #FF6B6B 0%, #FF4757 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            transition: all 0.2s;
+            z-index: 150;
+        }
+        #restart-button:hover {
+            transform: translateX(-50%) scale(1.05) translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+        }
+
+        #restart-button:active {
+            transform: translateX(-50%) scale(0.95);
+        }
+
+        @keyframes gradientShift {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        @keyframes smoothSlideIn {
+            from {
+                transform: translateY(-50px) scale(0.9);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes smoothFloat {
+            0%, 100% {
+                transform: translateY(0px) rotate(0deg);
+            }
+            33% {
+                transform: translateY(-15px) rotate(-5deg);
+            }
+            66% {
+                transform: translateY(-10px) rotate(5deg);
+            }
+        }
+
+        @keyframes smoothGlow {
+            0%, 100% {
+                filter: drop-shadow(0 0 10px rgba(255, 107, 107, 0.3));
+                transform: scale(1);
+            }
+            50% {
+                filter: drop-shadow(0 0 25px rgba(255, 107, 107, 0.6));
+                transform: scale(1.02);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes twinkle {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.3);
+                opacity: 0.7;
+            }
+        }
+
+    </style>
+
+    <style>@view-transition {
+        navigation: auto;
+    }</style>
+    <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+    <script src="/_sdk/element_sdk.js" type="text/javascript"></script>
+    <script src="https://cdn.tailwindcss.com" type="text/javascript"></script>
+
+    <link as="audio" href="audio/jump.wav" rel="preload">
+    <link as="audio" href="audio/wrong_answer.wav" rel="preload">
+</head>
+
+<body>
+
+<div id="game-container">
+    <div id="ui-overlay">
+        <div id="score-display"><span id="score-label">Punteggio</span>: <span id="score">0</span><br>
+            <span style="font-size: 14px; color: #7F8C8D;">Progresso: <span id="progress">0/3</span></span>
+        </div>
+        <button id="restart-button" onclick="restartGame()">Ricomincia</button>
+
+        <div id="word-display"></div>
+    </div>
+    <div id="main-screen">
+        <h1 id="title">WordRush</h1>
+        <button class="mario-button" id="start-button" disabled>INIZIA IL GIOCO</button>
+        <button class="mario-button" id="help-button">ISTRUZIONI</button>
+
+        <div class="character-selection" aria-label="Scegli il personaggio">
+            <h3>SCEGLI IL TUO PERSONAGGIO</h3>
+            <div class="character-container">
+                <div class="character-choice" data-character="male" title="Mario">
+                    <div class="character-preview" style="background: linear-gradient(180deg,#FF5A5A,#e6dfdf); border: 3px solid #CC0000;">
+                        <!-- Male SVG icon -->
+                        <svg width="36" height="28" viewBox="0 0 36 28" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <rect x="0" y="0" width="36" height="28" rx="6" fill="#FF4444" />
+                        </svg>
+                    </div>
+                    <p style="margin:0; font-size:14px; color:#FFF;">Mario</p>
+                </div>
+
+                <div class="character-choice" data-character="peach" title="Peach">
+                    <div class="character-preview" style="background: linear-gradient(180deg,#3a1126,#FFB6C1); border: 3px solid #FF69B4;">
+                        <!-- Peach SVG icon -->
+                        <svg width="36" height="28" viewBox="0 0 36 28" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <rect x="0" y="0" width="36" height="28" rx="6" fill="#FFB6C1" />
+                        </svg>
+                    </div>
+                    <p style="margin:0; font-size:14px; color:#FFF;">Peach</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="endScreen"
+         style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.8); z-index: 1000;
+            flex-direction: column; justify-content: center; align-items: center;
+            color: white; text-align: center;">
+        <h1 style="font-size: 4em; margin-bottom: 20px; text-shadow: 2px 2px 5px #000;">Congratulazioni!</h1>
+        <p style="font-size: 2em; margin-bottom: 40px;">Hai completato tutti i livelli di WordRush!</p>
+        <p style="font-size: 1em; margin-bottom: 20px;">Erika ed Emanuele ti ringraziano!</p>
+        <button class="restart-button" id="restart-button-endScreen" type="button"
+                style="margin-top: 10px; padding: 12px 28px; font-size: 1.2em; background: linear-gradient(135deg,#FF6B6B 0%,#FF4757 100%); color: white; border: none; border-radius: 20px; cursor: pointer;">
+            Ricomincia
+        </button>
+
+    </div>
+    <div id="level-title" class="hidden"></div>
+    <div id="feedback" class="game-hidden"></div>
+    <div class="cloud cloud1"></div>
+    <div class="cloud cloud2"></div><!-- Blocchi Mario - Gruppi uniti -->
+    <div class="cloud cloud3"></div>
+    <div class="cloud cloud4"></div>
+    <div class="cloud cloud5"></div>
+    <div class="cloud cloud6"></div>
+    <!-- Gruppo sinistra: 4 blocchi orizzontali bassi -->
+    <div class="mario-block block1"></div>
+    <div class="mario-block block2"></div>
+    <div class="mario-block block3"></div>
+    <div class="mario-block block4"></div><!-- Gruppo centro: scala 5 blocchi -->
+    <div class="mario-block block5"></div>
+    <div class="mario-block block6"></div>
+    <div class="mario-block block7"></div>
+    <div class="mario-block block8"></div>
+    <div class="mario-block block9"></div><!-- Gruppo destra: 4 blocchi orizzontali alti -->
+    <div class="mario-block block10"></div>
+    <div class="mario-block block11"></div>
+    <div class="mario-block block12"></div>
+    <div class="mario-block block13"></div>
+    <div id="player">
+        <div class="player-hat"></div>
+        <div class="player-body">
+            <div class="player-eyes">
+                <div class="eye"></div>
+                <div class="eye"></div>
+            </div>
+            <div class="player-mustache"></div>
+        </div>
+        <div class="player-legs">
+            <div class="leg"></div>
+            <div class="leg"></div>
+        </div>
+    </div>
+    <div id="grass"></div>
+    <div id="ground"></div>
+    <div id="instructions">
+        Usa le <strong>frecce ← →</strong> per muoverti e <strong>SPAZIO</strong> per saltare!<br>
+        Salta sulla parola corretta per guadagnare punti!
+    </div>
+</div>
+<script>
+
+    const defaultConfig = {
+        game_title: "WordRush",
+        score_label: "Punteggio",
+        correct_message: "Corretto!",
+        wrong_message: "Sbagliato!",
+        background_color: "#4A90E2",
+        player_color: "#FF4444",
+        ground_color: "#D2691E",
+        correct_option_color: "#00D2FF",
+        wrong_option_color: "#FF416C"
+    };
+
+    const wordPairs = {
+        1: [ // Livello 1 - Sostantivi (Oggetti, Animali e Famiglia)
+            {italian: "Cane", english: "Dog", wrong: ["Cat", "Bird", "Fish"]},
+            {italian: "Gatto", english: "Cat", wrong: ["Dog", "Mouse", "Lion"]},
+            {italian: "Mamma", english: "Mommy", wrong: ["Daddy", "Sister", "Brother"]},
+            {italian: "Papà", english: "Daddy", wrong: ["Mommy", "Grandpa", "Sister"]},
+            {italian: "Casa", english: "House", wrong: ["Car", "Tree", "School"]},
+            {italian: "Libro", english: "Book", wrong: ["Pen", "Paper", "Table"]},
+            {italian: "Mela", english: "Apple", wrong: ["Orange", "Banana", "Pear"]},
+            {italian: "Latte", english: "Milk", wrong: ["Water", "Juice", "Bread"]},
+            {italian: "Palla", english: "Ball", wrong: ["Car", "Doll", "Block"]},
+            {italian: "Scarpa", english: "Shoe", wrong: ["Sock", "Hat", "Glove"]}
+        ],
+        2: [ // Livello 2 - Aggettivi e Colori
+            {italian: "Rosso", english: "Red", wrong: ["Blue", "Yellow", "Green"]},
+            {italian: "Blu", english: "Blue", wrong: ["Black", "White", "Purple"]},
+            {italian: "Giallo", english: "Yellow", wrong: ["Red", "Orange", "Brown"]},
+            {italian: "Grande", english: "Big", wrong: ["Small", "Tiny", "Fast"]},
+            {italian: "Piccolo", english: "Small", wrong: ["Big", "Large", "Long"]},
+            {italian: "Felice", english: "Happy", wrong: ["Sad", "Mad", "Sleepy"]},
+            {italian: "Triste", english: "Sad", wrong: ["Happy", "Fun", "Funny"]},
+            {italian: "Acqua", english: "Water", wrong: ["Fire", "Sand", "Air"]},
+            {italian: "Albero", english: "Tree", wrong: ["Flower", "Bush", "Grass"]},
+            {italian: "Tavolo", english: "Table", wrong: ["Chair", "Bed", "Desk"]}
+        ],
+        3: [ // Livello 3 - Frasi Semplici (Combina Livelli 1 e 2)
+            {italian: "Il cane è felice.", english: "The dog is happy.", wrong: ["Dog is happy.", "The cat is happy.", "The dog is sad."]},
+            {italian: "La palla è rossa.", english: "The ball is red.", wrong: ["The ball is blue.", "Ball is red.", "The car is red."]},
+            {italian: "La casa è grande.", english: "The house is big.", wrong: ["The house is small.", "House is big.", "The table is big."]},
+            {italian: "La matita è giallo.", english: "The pencil is yellow.", wrong: ["Milk is yellow.", "The water is yellow.", "The milk is red."]},
+            {italian: "Il gatto è piccolo.", english: "The cat is small.", wrong: ["The cat is big.", "Cat is small.", "The dog is small."]},
+            {italian: "Il libro è blu.", english: "The book is blue.", wrong: ["The book is red.", "Book is blue.", "The shoe is blue."]},
+            {italian: "Papà è triste.", english: "Daddy is sad.", wrong: ["Mommy is sad.", "Daddy is happy.", "The daddy is sad."]},
+            {italian: "Mamma è felice.", english: "Mommy is happy.", wrong: ["Daddy is happy.", "Mommy is sad.", "The mommy is happy."]},
+            {italian: "L'albero è grande.", english: "The tree is big.", wrong: ["The tree is small.", "Tree is big.", "The table is big."]},
+            {italian: "La scarpa è rossa.", english: "The shoe is red.", wrong: ["The shoe is blue.", "Shoe is red.", "The shoe is small."]}
+        ],
+        4: [ // Livello 4 - Verbi e Azioni
+            {italian: "Correre", english: "Run", wrong: ["Walk", "Jump", "Sit"]},
+            {italian: "Saltare", english: "Jump", wrong: ["Run", "Swim", "Crawl"]},
+            {italian: "Dormire", english: "Sleep", wrong: ["Eat", "Drink", "Play"]},
+            {italian: "Mangiare", english: "Eat", wrong: ["Sleep", "Drink", "Wash"]},
+            {italian: "Bere", english: "Drink", wrong: ["Eat", "Read", "Write"]},
+            {italian: "Giocare", english: "Play", wrong: ["Work", "Study", "Clean"]},
+            {italian: "Camminare", english: "Walk", wrong: ["Run", "Jump", "Fly"]},
+            {italian: "Guardare", english: "Watch", wrong: ["Hear", "Touch", "Smell"]},
+            {italian: "Dare", english: "Give", wrong: ["Take", "Buy", "Sell"]},
+            {italian: "Avere", english: "Have", wrong: ["Want", "Need", "Is"]}
+        ],
+        5: [ // Livello 5 - Parti del Corpo e Numeri
+            {italian: "Uno", english: "One", wrong: ["Two", "Three", "Ten"]},
+            {italian: "Due", english: "Two", wrong: ["One", "Four", "Six"]},
+            {italian: "Tre", english: "Three", wrong: ["Five", "Seven", "Eight"]},
+            {italian: "Mano", english: "Hand", wrong: ["Foot", "Arm", "Finger"]},
+            {italian: "Piede", english: "Foot", wrong: ["Hand", "Leg", "Toe"]},
+            {italian: "Testa", english: "Head", wrong: ["Hair", "Shoulder", "Knee"]},
+            {italian: "Occhi", english: "Eyes", wrong: ["Ears", "Nose", "Mouth"]},
+            {italian: "Bocca", english: "Mouth", wrong: ["Nose", "Ear", "Eye"]},
+            {italian: "Braccio", english: "Arm", wrong: ["Leg", "Hand", "Shoulder"]},
+            {italian: "Gamba", english: "Leg", wrong: ["Arm", "Foot", "Knee"]}
+        ],
+        6: [ // Livello 6 - Frasi di Azione (Combina Livelli 1, 4 e 5)
+            {italian: "Io posso saltare in alto.", english: "I can jump high.", wrong: ["I can run high.", "He can jump high.", "I can jump low."]},
+            {italian: "Lui mangia una mela.", english: "He eats an apple.", wrong: ["She eats an apple.", "He drinks an apple.", "He eats a ball."]},
+            {italian: "Guardo la tv.", english: "I watch Tv.", wrong: ["I look at a dog.", "I eat a book.", "I read a book."]},
+            {italian: "Ho due mani.", english: "I have two hands.", wrong: ["I have three hands.", "I have two feet.", "I have one hand."]},
+            {italian: "Bevo latte.", english: "I drink milk.", wrong: ["I eat milk.", "I drink water.", "I have milk."]},
+            {italian: "Il cane corre veloce.", english: "The dog runs fast.", wrong: ["The cat runs fast.", "The dog walks fast.", "Dog runs fast."]},
+            {italian: "Gioca con la palla.", english: "Play with the ball.", wrong: ["Run with the ball.", "Play with the car.", "Play the ball."]},
+            {italian: "Voglio due scarpe rosse.", english: "I want two red shoes.", wrong: ["I want one red shoe.", "I want two blue shoes.", "I have two red shoes."]},
+            {italian: "Dai la palla a Papà.", english: "Give the ball to Daddy.", wrong: ["Give the ball to Mommy.", "Give the apple to Daddy.", "Take the ball to Daddy."]},
+            {italian: "La bocca è piccola.", english: "The mouth is small.", wrong: ["The nose is small.", "Mouth is small.", "The mouth is big."]}
+        ],
+        7: [ // Livello 7 - Luoghi e Tempo
+            {italian: "Fuori", english: "Outside", wrong: ["Inside", "Up", "Down"]},
+            {italian: "Dentro", english: "Inside", wrong: ["Outside", "Near", "Far"]},
+            {italian: "Sole", english: "Sun", wrong: ["Moon", "Star", "Rain"]},
+            {italian: "Nuvola", english: "Cloud", wrong: ["Sun", "Sky", "Wind"]},
+            {italian: "Giorno", english: "Day", wrong: ["Night", "Morning", "Evening"]},
+            {italian: "Notte", english: "Night", wrong: ["Day", "Afternoon", "Lunch"]},
+            {italian: "Giardino", english: "Garden", wrong: ["Kitchen", "Room", "School"]},
+            {italian: "Parco", english: "Park", wrong: ["House", "Shop", "Street"]},
+            {italian: "Treno", english: "Train", wrong: ["Bus", "Plane", "Bike"]},
+            {italian: "Qui", english: "Here", wrong: ["There", "Always", "Never"]}
+        ],
+        8: [ // Livello 8 - Frasi Complesse (Usa tutti i Livelli 1-7)
+            {italian: "Il gatto dorme dentro la casa.", english: "The cat sleeps inside the house.", wrong: ["The dog sleeps inside the house.", "The cat sleeps outside the house.", "Cat sleeps inside house."]},
+            {italian: "Voglio giocare con la palla gialla fuori.", english: "I want to play with the yellow ball outside.", wrong: ["I want to run with the yellow ball outside.", "I want to play with the red ball outside.", "I have to play with the yellow ball outside."]},
+            {italian: "Mamma, dai il latte al cane qui.", english: "Mommy, give the milk to the dog here.", wrong: ["Daddy, give the water to the dog here.", "Mommy, give the bread to the dog here.", "Mommy, give the milk to the cat here."]},
+            {italian: "Corro nel parco con due piedi.", english: "I run in the park with two feet.", wrong: ["I walk in the park with two feet.", "I run in the house with two feet.", "I run in the park with three feet."]},
+            {italian: "Di notte, bevo acqua fredda.", english: "At night, I drink cold water.", wrong: ["At day, I drink cold water.", "At night, I drink hot water.", "At night, I eat cold water."]},
+            {italian: "Ho la palla rossa nella mano.", english: "I have the red ball in my hand.", wrong: ["I have the blue ball in my hand.", "I have the red shoe in my hand.", "I have a red ball in my hand."]},
+            {italian: "Il treno è grande e blu.", english: "The train is big and blue.", wrong: ["The bus is big and blue.", "The train is small and blue.", "Train is big and blue."]},
+            {italian: "Saltiamo in giardino, felici.", english: "We jump in the garden, happy.", wrong: ["We run in the garden, happy.", "We jump in the house, happy.", "I jump in the garden, happy."]},
+            {italian: "Papà mangia una mela piccola.", english: "Daddy eats a small apple.", wrong: ["Mommy eats a small apple.", "Daddy eats a big apple.", "Daddy drinks a small apple."]}
+        ]
+    };
+
+    // Array di oggetti che definiscono le coordinate iniziali (posizione assoluta) dei blocchi nel gioco
+    // { left: X coordinate, bottom: Y coordinate (distanza dalla base/terra) }
+    const blockPositions = [
+        { left: 80, bottom: 180 },
+        { left: 300, bottom: 250 },
+        { left: 500, bottom: 180 }
+    ];
+
+    /*FUNZIONI PER RANDOMIZZARE*/
+    /*per provare a randomizzare , non funziona come vorrei*/
+    function shuffle(array) {
+        return array.sort(() => Math.random() - 0.5);
+    }
+    // 1. Prepara le risposte e le mescola
+    // Crea un array con la risposta corretta e tutte le risposte sbagliate, poi lo mescola.
+    function updateBlocks(pair) {
+        const answers = shuffle([pair.english, ...pair.wrong]);
+        const positions = shuffle(blockPositions);
+    }
+    // --- 1. Definizione e Caricamento Iniziale degli SFX ---
+
+    // Qui definiamo i suoni che useremo nel gioco. Li carichiamo in oggetti Audio.
+    const sfx = {
+        jump: new Audio('./audio/jump.wav'),
+        wrong: new Audio('./audio/wrong_answer.wav')
+    };
+    // Verifichiamo che i file audio siano stati caricati correttamente (utile per il debugging)
+    Object.entries(sfx).forEach(([name, audio]) => {
+        audio.addEventListener('canplaythrough', () => console.log(`${name} caricato ->`, audio.src));
+        audio.addEventListener('error', (e) => console.error(`${name} errore caricamento ->`, audio.src, e));
+    });
+
+
+    // --- 2. Impostazioni Base (Volume, Precaricamento) ---
+    Object.values(sfx).forEach(a => {
+        a.preload = 'auto';
+        a.volume = 0.5;
+        a.crossOrigin = 'anonymous';
+    });
+
+    // funzione per suonare permettendo colpi ravvicinati (cloneNode)
+    function playSfx(sound) {
+        // sblocca l'audio dopo un gesto dell’utente (autoplay policy)
+        // Nota: i keydown/click sbloccano già; questa catch evita warning
+        const node = sound.cloneNode(true);
+        node.volume = sound.volume;
+        node.play().catch(() => {
+        });
+    }
+
+    // --- PRONUNCIA DI PAROLE E FRASI ---
+    let voices = [];
+    let voiceEn = null;
+
+    function loadVoices() {
+        voices = window.speechSynthesis ? speechSynthesis.getVoices() : [];
+        // voce inglese naturale
+        voiceEn =
+            voices.find(v => /en-US/i.test(v.lang)) ||
+            voices.find(v => /^en/i.test(v.lang)) ||
+            null;
+    }
+
+    if ('speechSynthesis' in window) {
+        loadVoices();
+        window.speechSynthesis.onvoiceschanged = loadVoices;
+    }
+
+    // Funzione per la voce in inglese
+    function speakEn(text) {
+        if (!('speechSynthesis' in window) || !text) return;
+
+        // Funzione per evitare sovrapposizioni con le pronunce ancora in coda
+        speechSynthesis.cancel();
+
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = voiceEn?.lang || 'en-US';
+        if (voiceEn) u.voice = voiceEn;
+
+        // Velocità delle pronunce
+        u.rate = text.trim().includes(' ') ? 0.9 : 1.0;
+        u.pitch = 1.0;
+        u.volume = 1.0;
+
+        speechSynthesis.speak(u);
+    }
+
+    // Stato iniziale del gioco
+    let score = 0;
+    let level = 1;
+    let usedWords = {};
+    let wordsInLevel = 0;
+    let wordsNeededForNextLevel = 3; // livello 1: servono 3 parole per salire
+    let currentWord = null;
+    let playerX = 100;
+    let playerY = 100;
+    let velocityY = 0;
+    let isJumping = false;
+    let keys = {};
+    let translationElements = [];
+    let gameActive = true;
+    let collisionProcessed = false;
+    let hasMovedOnce = false;
+    let currentLevelWordList = [];
+    let usedWordIndices = new Set();
+
+
+    const player = document.getElementById('player');
+    const scoreDisplay = document.getElementById('score');
+    const levelTitleElement = document.getElementById('level-title');
+    const progressDisplay = document.getElementById('progress');
+    const wordDisplay = document.getElementById('word-display');
+    const feedback = document.getElementById('feedback');
+    const gameContainer = document.getElementById('game-container');
+    const instructions = document.getElementById('instructions');
+    const groundEl = document.getElementById('ground');
+    const grassEl = document.getElementById('grass');
+    let prevPlayerX = playerX;
+    let groundOffset = 0;
+
+
+    const restartEndscreenBtn = endScreen ? endScreen.querySelector('#restart-button-endScreen') : null;
+
+    if (restartEndscreenBtn) {
+        restartEndscreenBtn.addEventListener('click', () => {
+
+            // 1. Nascondi lo schermo finale
+            if (typeof hideEndScreen === 'function') {
+                hideEndScreen();
+            } else {
+                document.getElementById("endScreen").style.display = 'none';
+                document.getElementById("gameCanvas").style.display = 'block';
+            }
+
+            // 2. Riavvia la logica del gioco
+            if (typeof restartGame === 'function') restartGame();
+        });
+    }
+
+
+        function showEndScreen() {
+        document.getElementById("endScreen").style.display = "flex";
+        document.getElementById("gameCanvas").style.display = "none";
+        gameActive = false;
+
+        if (sourceNode) {
+            stopLoop(true);
+        }
+    }
+
+
+
+        function hideEndScreen() {
+            // Nasconde lo schermo finale
+            const endScreen = document.getElementById("endScreen");
+            if (endScreen) {
+                endScreen.style.display = 'none';
+            }
+            // Mostra il canvas del gioco
+            document.getElementById("gameCanvas").style.display = "block";
+            gameActive = true;
+            
+        }
+
+
+
+        function restartGame() {
+
+            if (window.gameAnimationId) cancelAnimationFrame(window.gameAnimationId);
+            if (window.gameIntervalId) {
+                clearInterval(window.gameIntervalId);
+                window.gameIntervalId = null;
+            }
+
+            score = 0;
+            level = 1;
+            wordsInLevel = 0;
+            wordsNeededForNextLevel = 3;
+            playerX = 100;
+            playerY = 100;
+            velocityY = 0;
+            isJumping = false;
+            gameActive = true;
+            collisionProcessed = false;
+
+            // Update display
+            scoreDisplay.textContent = score;
+            if (levelTitleElement) {
+                levelTitleElement.textContent = 'Livello ' + level;
+                levelTitleElement.classList.remove('hidden');
+                levelTitleElement.classList.remove('game-hidden');
+            }
+            progressDisplay.textContent = `${wordsInLevel}/${wordsNeededForNextLevel}`;
+
+            // Reset posizione player
+            player.style.left = `${playerX}px`;
+            player.style.bottom = `${playerY}px`;
+
+            // Reset background colore
+            gameContainer.style.background = 'linear-gradient(to bottom, #4A90E2 0%, #87CEEB 50%, #FFE4B5 100%)';
+
+
+            const existingMessages = gameContainer.querySelectorAll('[style*="levelUpAnimation"], #feedback');
+            existingMessages.forEach(el => {
+                if (el.id !== 'feedback') el.remove();
+            });
+            feedback.className = '';
+
+            //  dove avviene il random delle parole
+            loadNewWord();
+
+            //  restart messaggio
+            const restartMsg = document.createElement('div');
+            restartMsg.textContent = 'GIOCO RIAVVIATO!';
+            restartMsg.style.cssText = `
+            position: absolute;
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 36px;
+            font-weight: bold;
+            color: #2ECC71;
+            text-shadow: 2px 2px 0 #27AE60;
+            z-index: 300;
+            opacity: 1;
+            pointer-events: none;
+            transition: opacity 0.3s ease-out;
+        `;
+            gameContainer.appendChild(restartMsg);
+
+            setTimeout(() => {
+                restartMsg.style.opacity = '0';
+                setTimeout(() => restartMsg.remove(), 300);
+            }, 1500);
+
+            // Restart musica
+            if (musicStartedWA && !muted) {
+                stopLoop(false);
+                playLoop();
+            }
+        }
+
+        // inizializzo setup
+        updateGameConfig();
+        loadNewWord();
+        gameLoop();
+
+        const restartGameButton = document.getElementById('restart-button');
+        if (restartGameButton) {
+            restartGameButton.addEventListener('click', () => {
+                if (typeof restartGame === 'function') restartGame();
+            });
+        }
+        // --- personaggio selezionato (main-screen) ---
+        let selectedCharacter = null;
+
+        function applyCharacterColors(character) {
+            const playerBody = document.querySelector('.player-body');
+            const playerHat = document.querySelector('.player-hat');
+            if (!playerBody || !playerHat) return;
+            if (character === 'male') {
+                playerBody.style.backgroundColor = '#FF4444';
+                playerBody.style.borderColor = '#CC0000';
+                playerHat.style.backgroundColor = '#FF0000';
+                playerHat.style.borderColor = '#CC0000';
+            } else if (character === 'peach') {
+                playerBody.style.backgroundColor = '#FFB6C1';
+                playerBody.style.borderColor = '#FF69B4';
+                playerHat.style.backgroundColor = '#c009dc';
+                playerHat.style.borderColor = '#3a1126';
+            }
+        }
+
+        document.querySelectorAll('.character-choice').forEach(choice => {
+            choice.addEventListener('click', () => {
+                document.querySelectorAll('.character-choice').forEach(c => c.classList.remove('selected'));
+                choice.classList.add('selected');
+                const character = choice.dataset.character;
+                selectedCharacter = character;
+                applyCharacterColors(character);
+                const startBtn = document.getElementById('start-button');
+                if (startBtn) startBtn.disabled = false;
+            });
+        });
+
+        // Configurazione semplificata per uso locale
+        function updateGameConfig() {
+            document.getElementById('score-label').textContent = defaultConfig.score_label;
+            gameContainer.style.background = `linear-gradient(to bottom, ${defaultConfig.background_color} 0%, ${adjustColor(defaultConfig.background_color, 20)} 50%, #FFE4B5 100%)`;
+            document.querySelector('.player-body').style.backgroundColor = defaultConfig.player_color;
+            document.getElementById('ground').style.background = `linear-gradient(to bottom, ${defaultConfig.ground_color} 0%, #8B4513 100%)`;
+        }
+
+        function adjustColor(color, percent) {
+            const num = parseInt(color.replace("#", ""), 16);
+            const amt = Math.round(2.55 * percent);
+            const R = (num >> 16) + amt;
+            const G = (num >> 8 & 0x00FF) + amt;
+            const B = (num & 0x0000FF) + amt;
+            return "#" + (0x1000000 + (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 +
+                (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 + (B < 255 ? B < 1 ? 0 : B : 255))
+                .toString(16).slice(1);
+        }
+
+        function levelUp() {
+            if (level >= 8) {
+                showEndScreen();
+                return;
+            }
+
+            level++;
+            wordsInLevel = 0;
+            wordsNeededForNextLevel = Math.min(2 + level, 8); // Aumenta difficoltà ma max 8 parole
+
+            if (levelTitleElement) {
+                levelTitleElement.textContent = 'Livello ' + level;
+                levelTitleElement.classList.remove('hidden');
+                levelTitleElement.classList.remove('game-hidden');
+            }
+            progressDisplay.textContent = `${wordsInLevel}/${wordsNeededForNextLevel}`;
+
+            // Reset posizione giocatore immediatamente
+            resetPlayerPosition();
+        }
+
+
+        // Effetto visivo level up
+        const levelUpMsg = document.createElement('div');
+        levelUpMsg.textContent = `LIVELLO ${level}!`;
+        levelUpMsg.style.cssText = `
+                position: absolute;
+                margin-top: 50px;
+                top: 30%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                font-size: 64px;
+                font-weight: bold;
+                color: #FFD700;
+                text-shadow: 3px 3px 0 #FF6B00, -1px -1px 0 #FF6B00, 1px -1px 0 #FF6B00, -1px 1px 0 #FF6B00;
+                z-index: 300;
+                animation: levelUpAnimation 2s ease-out forwards;
+                pointer-events: none;
+            `;
+
+        if (!document.getElementById('levelUpStyle')) {
+            const style = document.createElement('style');
+            style.id = 'levelUpStyle';
+            style.textContent = `
+                    @keyframes levelUpAnimation {
+                        0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+                        20% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+                        80% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+                        100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+                    }
+                `;
+            document.head.appendChild(style);
+        }
+
+        gameContainer.appendChild(levelUpMsg);
+
+        setTimeout(() => {
+            if (levelUpMsg.parentNode) {
+                levelUpMsg.remove();
+            }
+        }, 2000);
+
+        const levelColors = [
+            '#4A90E2', '#9B59B6', '#E67E22', '#E74C3C', '#27AE60',
+            '#F39C12', '#8E44AD', '#2ECC71', '#3498DB', '#E91E63'
+        ];
+        const newBgColor = levelColors[(level - 1) % levelColors.length];
+        gameContainer.style.background = `linear-gradient(to bottom, ${newBgColor} 0%, ${adjustColor(newBgColor, 20)} 50%, #FFE4B5 100%)`;
+
+
+        function loadNewWord() {
+
+            translationElements.forEach(el => el.remove());
+            translationElements = [];
+
+            // Seleziona parole appropriate per il livello corrente
+            const lvl = Math.max(1, Math.min(level, 8));
+            const currentLevelWords = wordPairs[lvl] || wordPairs[1];
+
+            // Seleziona casualmente una parola
+            currentWord = currentLevelWords[Math.floor(Math.random() * currentLevelWords.length)];
+            wordDisplay.textContent = currentWord.italian;
+
+            // Prepara le opzioni di risposta
+            const options = [currentWord.english, ...currentWord.wrong.slice(0, 2)];
+            options.sort(() => Math.random() - 0.5);
+
+            // Posizioni fisse sopra i gruppi di blocchi - più distanti e più in alto
+            const positions = [
+                {bottom: '320px', left: '150px'}, // Sopra gruppo sinistra
+                {bottom: '480px', left: '50%', transform: 'translateX(-50%)'}, // Sopra blocco centrale alto
+                {bottom: '420px', right: '150px'}  // Sopra gruppo destra
+            ];
+
+            // Crea e posiziona le opzioni
+            options.forEach((option, index) => {
+                const optionEl = document.createElement('div');
+                optionEl.className = 'translation-option';
+                optionEl.textContent = option;
+
+                const pos = positions[index];
+                optionEl.style.bottom = pos.bottom;
+                if (pos.left) optionEl.style.left = pos.left;
+                if (pos.right) optionEl.style.right = pos.right;
+                if (pos.transform) optionEl.style.transform = pos.transform;
+
+                optionEl.dataset.correct = (option === currentWord.english).toString();
+                gameContainer.appendChild(optionEl);
+                translationElements.push(optionEl);
+            });
+        }
+
+
+        function showFeedback(isCorrect) {
+            feedback.textContent = isCorrect ? defaultConfig.correct_message : defaultConfig.wrong_message;
+            feedback.className = isCorrect ? 'show correct' : 'show wrong';
+
+            setTimeout(() => {
+                feedback.className = '';
+            }, 1000);
+        }
+
+        function resetPlayerPosition() {
+            playerX = 100;
+            playerY = 100;
+            velocityY = 0;
+            isJumping = false;
+            player.style.left = `${playerX}px`;
+            player.style.bottom = `${playerY}px`;
+        }
+
+        function checkCollisions() {
+            if (!gameActive || collisionProcessed) return;
+
+            const playerRect = player.getBoundingClientRect();
+            let onPlatform = false;
+
+            // Controlla collisioni con i blocchi Mario
+            const blocks = document.querySelectorAll('.mario-block');
+            blocks.forEach(block => {
+                const blockRect = block.getBoundingClientRect();
+
+                // Collisione dall'alto (atterraggio e camminata sul blocco)
+                // Margine di 10px sui lati per permettere di camminare fino al bordo
+                if (playerRect.left + 10 < blockRect.right &&
+                    playerRect.right - 10 > blockRect.left &&
+                    playerRect.bottom >= blockRect.top - 5 &&
+                    playerRect.bottom <= blockRect.top + 20 &&
+                    velocityY <= 0) {
+
+                    const blockBottom = window.innerHeight - blockRect.top;
+                    playerY = blockBottom;
+                    velocityY = 0;
+                    isJumping = false;
+                    onPlatform = true;
+                }
+            });
+
+            // Controlla collisioni con le opzioni di traduzione
+            translationElements.forEach(option => {
+                const optionRect = option.getBoundingClientRect();
+
+                if (playerRect.left < optionRect.right &&
+                    playerRect.right > optionRect.left &&
+                    playerRect.top < optionRect.bottom &&
+                    playerRect.bottom > optionRect.top) {
+
+                    // Previeni collisioni multiple
+                    collisionProcessed = true;
+                    gameActive = false;
+
+                    const isCorrect = option.dataset.correct === 'true';
+
+                    if (isCorrect) {
+                        score++;
+                        wordsInLevel++;
+                        scoreDisplay.textContent = score;
+                        progressDisplay.textContent = `${wordsInLevel}/${wordsNeededForNextLevel}`;
+                        speakEn(currentWord.english); // <-- Permette di far sentire la pronuncia della parola corretta
+
+                        showFeedback(true);
+                        option.classList.add('correct');
+
+                        // Reset posizione giocatore
+                        setTimeout(() => {
+                            resetPlayerPosition();
+                        }, 500);
+
+                        // Controlla se è ora di salire di livello
+                        if (wordsInLevel >= wordsNeededForNextLevel) {
+                            setTimeout(() => {
+                                levelUp();
+                                setTimeout(() => {
+                                    loadNewWord();
+                                    gameActive = true;
+                                    collisionProcessed = false;
+                                }, 1500);
+                            }, 1000);
+                        } else {
+                            setTimeout(() => {
+                                loadNewWord();
+                                gameActive = true;
+                                collisionProcessed = false;
+                            }, 1000);
+                        }
+                    } else {
+                        playSfx(sfx.wrong);
+                        showFeedback(false);
+                        option.classList.add('wrong');
+
+                        // Reset posizione giocatore
+                        setTimeout(() => {
+                            resetPlayerPosition();
+                        }, 500);
+
+                        setTimeout(() => {
+                            loadNewWord();
+                            gameActive = true;
+                            collisionProcessed = false;
+                        }, 1000);
+                    }
+                }
+            });
+        }
+
+        function updatePlayer() {
+            if (keys['ArrowLeft']) {
+                playerX = Math.max(0, playerX - 5);
+                if (!hasMovedOnce) {
+                    hasMovedOnce = true;
+                    instructions.style.opacity = '0';
+                    setTimeout(() => instructions.style.display = 'none', 300);
+                }
+            }
+            if (keys['ArrowRight']) {
+                playerX = Math.min(gameContainer.offsetWidth - 50, playerX + 5);
+                if (!hasMovedOnce) {
+                    hasMovedOnce = true;
+                    instructions.style.opacity = '0';
+                    setTimeout(() => instructions.style.display = 'none', 300);
+                }
+            }
+
+            if (keys['Space'] && !isJumping) {
+                velocityY = 18; // Velocità positiva per andare verso l'alto
+                isJumping = true;
+                playSfx(sfx.jump);
+
+                if (!hasMovedOnce) {
+                    hasMovedOnce = true;
+                    instructions.style.opacity = '0';
+                    setTimeout(() => instructions.style.display = 'none', 300);
+                }
+            }
+
+            velocityY -= 0.7; // Gravità negativa per far cadere il giocatore
+            playerY += velocityY;
+
+            if (playerY <= 100) {
+                playerY = 100;
+                velocityY = 0;
+                isJumping = false;
+            }
+
+            const deltaX = playerX - prevPlayerX;
+            if (deltaX !== 0) {
+                // La velocità con cui lo sfondo si muoverà rispetto al personaggio
+                const factor = 0.6;
+                // Aggiorna la posizione attuale dello sfondo, basandoti sul movimento laterale (deltaX)
+// groundOffset tiene traccia di quanto è stato spostato lo sfondo finora.
+// Si sottrae perché quando il personaggio va a destra, lo sfondo si sposta a sinistra.
+                groundOffset -= deltaX * factor;
+                if (groundEl) {
+                    const p1 = groundOffset;
+                    const p2 = groundOffset * 0.6;
+                    const p3 = groundOffset * 0.4;
+                    const p4 = groundOffset * 0.8;
+                    groundEl.style.backgroundPosition = `${p1}px 0, ${p2}px 0, ${p3}px 0, ${p4}px 0`;
+                    groundEl.style.animation = 'none';
+                }
+                if (grassEl) {
+                    grassEl.style.backgroundPosition = `${groundOffset * 0.6}px 0`;
+                    grassEl.style.animation = 'none';
+                }
+                prevPlayerX = playerX;
+            }
+
+            player.style.left = `${playerX}px`;
+            player.style.bottom = `${playerY}px`;
+
+            checkCollisions();
+        }
+
+        function gameLoop() {
+            // Il loop continua a girare, ma il codice di aggiornamento viene eseguito solo se il gioco è attivo
+            if (gameActive) {
+                updatePlayer();
+            }
+            // Assicurati che il loop si chiami sempre per essere pronto al riavvio
+            requestAnimationFrame(gameLoop);
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                keys['Space'] = true;
+                e.preventDefault();
+            } else {
+                keys[e.key] = true;
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            if (e.code === 'Space') {
+                keys['Space'] = false;
+            } else {
+                keys[e.key] = false;
+            }
+        });
+
+        // Comandi per la musica di sottofondo
+        let audioCtx, gain, sourceBuffer, sourceNode;
+        let musicStartedWA = false;
+
+        async function setupWebAudio() {
+            if (audioCtx) return;
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+            // Carica il file(stesso dominio/hosting)
+            const res = await fetch('audio/loop.mp3');
+            const arr = await res.arrayBuffer();
+            sourceBuffer = await audioCtx.decodeAudioData(arr);
+
+            // Gain per controllare volume/fade
+            gain = audioCtx.createGain();
+            gain.gain.value = 0; // partire silenziosi
+            gain.connect(audioCtx.destination);
+        }
+
+        function playLoop() {
+            if (!audioCtx || !sourceBuffer) return;
+
+            // Ogni volta crea un nuovo sourceNode
+            sourceNode = audioCtx.createBufferSource();
+            sourceNode.buffer = sourceBuffer;
+            sourceNode.loop = true; // loop perfetto (niente gap)
+            sourceNode.connect(gain);
+            sourceNode.start(0);
+
+            // Fade-in 600ms
+            const now = audioCtx.currentTime;
+            gain.gain.cancelScheduledValues(now);
+            gain.gain.setValueAtTime(gain.gain.value, now);
+            gain.gain.linearRampToValueAtTime(0.35, now + 0.6);
+        }
+
+        function stopLoop(withFade = true) {
+            if (!audioCtx || !sourceNode) return;
+            const now = audioCtx.currentTime;
+            if (withFade) {
+                gain.gain.cancelScheduledValues(now);
+                gain.gain.setValueAtTime(gain.gain.value, now);
+                gain.gain.linearRampToValueAtTime(0.0, now + 0.4);
+                setTimeout(() => {
+                    sourceNode.stop();
+                    sourceNode.disconnect();
+                    sourceNode = null;
+                }, 420);
+            } else {
+                sourceNode.stop();
+                sourceNode.disconnect();
+                sourceNode = null;
+            }
+        }
+
+        async function startMusicOnceWA() {
+            if (musicStartedWA) return;
+            musicStartedWA = true;
+            await setupWebAudio();
+            if (audioCtx.state === 'suspended') await audioCtx.resume();
+            playLoop();
+        }
+
+// Primo ingresso dell’utente
+        window.addEventListener('keydown', startMusicOnceWA, {once: true});
+        window.addEventListener('click', startMusicOnceWA, {once: true});
+        window.addEventListener('touchstart', startMusicOnceWA, {once: true});
+
+        // Pulsante mute
+        const muteToggle = document.getElementById('mute-toggle');
+        let muted = false;
+        muteToggle.addEventListener('click', async () => {
+            await setupWebAudio();
+            if (!musicStartedWA) await startMusicOnceWA();
+
+            const now = audioCtx.currentTime;
+            muted = !muted;
+            muteToggle.textContent = muted ? '🔇 Musica' : '🔊 Musica';
+            gain.gain.cancelScheduledValues(now);
+            if (muted) {
+                gain.gain.setValueAtTime(gain.gain.value, now);
+                gain.gain.linearRampToValueAtTime(0.0, now + 0.25);
+            } else {
+                gain.gain.setValueAtTime(gain.gain.value, now);
+                gain.gain.linearRampToValueAtTime(0.35, now + 0.25);
+            }
+        });
+
+// Tab nascosta
+        document.addEventListener('visibilitychange', async () => {
+            if (!audioCtx) return;
+            if (document.hidden) {
+                stopLoop(true);
+                await audioCtx.suspend();
+            } else {
+                await audioCtx.resume();
+                if (musicStartedWA && !muted) playLoop();
+            }
+        })
+
+
+</script>
+<script>(function () {
+    function c() {
+        var b = a.contentDocument || a.contentWindow.document;
+        if (b) {
+            var d = b.createElement('script');
+            d.innerHTML = "window.__CF$cv$params={r:'99ae72b527cac536',t:'MTc2MjUzNTQ2OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";
+            b.getElementsByTagName('head')[0].appendChild(d)
+        }
+    }
+    document.getElementById('start-button').addEventListener('click', function() {
+
+        document.getElementById('main-screen').classList.add('hidden');
+
+
+        const levelTitleElement = document.getElementById('level-title');
+        if (levelTitleElement) {
+            levelTitleElement.textContent = 'Livello 1';
+            levelTitleElement.classList.remove('hidden');
+            levelTitleElement.classList.remove('game-hidden');
+        }
+
+        console.log("Gioco avviato!");
+    });
+
+    document.getElementById('help-button').addEventListener('click', function() {
+        alert("Istruzioni: Salta sulla parola corretta per vincere!");
+    });
+
+    if (document.body) {
+        var a = document.createElement('iframe');
+        a.height = 1;
+        a.width = 1;
+        a.style.position = 'absolute';
+        a.style.top = 0;
+        a.style.left = 0;
+        a.style.border = 'none';
+        a.style.visibility = 'hidden';
+        document.body.appendChild(a);
+        if ('loading' !== document.readyState) c(); else if (window.addEventListener) document.addEventListener('DOMContentLoaded', c); else {
+            var e = document.onreadystatechange || function () {
+            };
+            document.onreadystatechange = function (b) {
+                e(b);
+                'loading' !== document.readyState && (document.onreadystatechange = e, c())
+            }
+        }
+    }
+})();
+</script>
+</body>
+
+</html>
