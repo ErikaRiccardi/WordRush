@@ -8,7 +8,7 @@ L'obiettivo del giocatore è guidare il personaggio a selezionare il blocco di t
 ## Caratteristiche Chiave
 
 * **Platform Gameplay:** Meccaniche di gioco dinamiche (salto e movimento).
-* **Contenuti Validati:** Set di vocaboli Inglese validati da laureati in Lingua.
+* **Contenuti Validati:** Set di vocaboli in inglese validati da laureati in Lingue.
 * **Architettura Espandibile:** Struttura pronta per l'aggiunta di nuove lingue (es. Russo, Spagnolo) con interventi minimi.
 * **Tecnologie:** Sviluppato interamente in **JavaScript** (logica di gioco) e **CSS** (grafica retrò).
 
